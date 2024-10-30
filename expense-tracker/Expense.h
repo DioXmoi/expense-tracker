@@ -3,6 +3,7 @@
 #include <chrono>
 #include <string>
 #include <string_view>
+#include <utility>
 
 
 using ID = int;
@@ -23,7 +24,29 @@ public:
 	void SetDescription(std::string_view description) { m_description = description; }
 	float  GetAmount() const { return m_amount; }
 	void SetAmount(int amount) { m_amount = amount; }
-	Date GetCreateAt() { return m_createAt; }
+	Date GetCreateAt() const { return m_createAt; }
+
+	Expense& operator=(const Expense&) = delete;
+
+	Expense& operator=(Expense&& exp) noexcept {
+		if (&exp != this) {
+			m_id = exp.GetID();
+			m_description = std::move(exp.GetDescription());
+			m_amount = exp.GetAmount();
+			m_createAt = std::move(exp.GetCreateAt());
+		}
+
+		return *this;
+	}
+
+	Expense(Expense&) = delete;
+
+	Expense(Expense&& exp) noexcept {
+		m_id = exp.GetID();
+		m_description = std::move(exp.GetDescription());
+		m_amount = exp.GetAmount();
+		m_createAt = std::move(exp.GetCreateAt());
+	}
 
 private:
 	ID m_id{};
