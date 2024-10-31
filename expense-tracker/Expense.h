@@ -23,7 +23,7 @@ public:
 	std::string GetDescription() const { return m_description; }
 	void SetDescription(std::string_view description) { m_description = description; }
 	float  GetAmount() const { return m_amount; }
-	void SetAmount(int amount) { m_amount = amount; }
+	void SetAmount(float amount) { m_amount = amount; }
 	Date GetCreateAt() const { return m_createAt; }
 
 	Expense& operator=(const Expense&) = delete;
