@@ -97,7 +97,7 @@ static std::string_view GetValideDescription(const std::vector<std::string>& com
 			commend[index], "You should use \"--description\"!"));
 	}
 
-	return commend[index + 1]; // ADD COMM
+	return commend[index + 1]; //the index + 1 is the value of the key in the array by index
 }
 
 static float GetValideAmount(const std::vector<std::string>& commend, std::size_t index) {
@@ -108,7 +108,7 @@ static float GetValideAmount(const std::vector<std::string>& commend, std::size_
 
 	float amount;
 	try {
-		amount = static_cast<float>(std::stoi(commend[index + 1])); //why index + 1? add comm OK/
+		amount = static_cast<float>(std::stoi(commend[index + 1])); //the index + 1 is the value of the key in the array by index
 	}
 	catch (std::invalid_argument&) {
 		throw std::invalid_argument(std::format("You have entered \"{}\" and you needed a number!", commend[index + 1]));
@@ -125,7 +125,7 @@ static ID GetValidID(const std::vector<std::string>& commend, std::size_t index)
 
 	ID id;
 	try {
-		id = static_cast<ID>(std::stoi(commend[index + 1])); //why index + 1? add comm OK/
+		id = static_cast<ID>(std::stoi(commend[index + 1])); //the index + 1 is the value of the key in the array by index
 	}
 	catch (std::invalid_argument&) {
 		throw std::invalid_argument(std::format("You have entered \"{}\" and you needed a number!", commend[index + 1]));
@@ -142,7 +142,7 @@ static MonthTypes IsValidMonth(const std::vector<std::string>& commend, std::siz
 
 	MonthTypes month;
 	try {
-		month = static_cast<MonthTypes>(std::stoi(commend[index + 1]) - 1); //why index + 1? add comm OK/
+		month = static_cast<MonthTypes>(std::stoi(commend[index + 1]) - 1); //the index + 1 is the value of the key in the array by index
 	}
 	catch (std::invalid_argument&) {
 		throw std::invalid_argument(std::format("You have entered \"{}\" and you needed a number!", commend[index + 1]));
