@@ -4,6 +4,7 @@
 #include <algorithm>
 #include <array>
 #include <sstream>
+#include <format>
 
 
 
@@ -37,6 +38,11 @@ Expense::Type ExpenseUtils::from_string_type(std::string_view str) {
 		"entertainments", "personalExpenses", "education", "gifts", "pets", "pepair and maintenance", "other" };
 
 	auto found{ std::ranges::find(name, str) };
+	if (found == name.end()) {
+		throw std::invalid_argument(std::format("Error:\tinvalide argument - \"{}\"! {}",
+			str, "You should use \"Not Installed, Housing, Products, Transport, Healthcare, Clothes, Entertainments, Personal Expenses, Education, Gifts, Pets, Repair And Maintenance or Other.\"!"));
+
+	}
 
 	return static_cast<Expense::Type>(found - name.begin());
 }

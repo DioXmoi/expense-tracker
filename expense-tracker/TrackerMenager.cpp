@@ -33,6 +33,8 @@ enum CommendTypes {
 	Summary,
 };
 
+
+
 std::vector<std::string> TrackerMenager::ParseARGV(int argc, wchar_t* argv[]) {
 	std::vector<std::string> commends{};
 	for (int i{ 1 }; i < argc; ++i) {
@@ -41,6 +43,8 @@ std::vector<std::string> TrackerMenager::ParseARGV(int argc, wchar_t* argv[]) {
 
 	return commends;
 }
+
+
 
 CommendTypes ParseCommendTypes(std::string_view str);
 void HendlerCommendAdd(const std::vector<std::string>& commend, std::vector<Expense>& expenses);
@@ -84,6 +88,8 @@ CommendTypes ParseCommendTypes(std::string_view str) {
 
 	return static_cast<CommendTypes>(found - names.begin());
 }
+
+
 
 static void IsValideCountArgument(const std::vector<std::string>& commend, std::size_t count) {
 	if (commend.size() != count) {
@@ -134,7 +140,7 @@ static ID GetValidID(const std::vector<std::string>& commend, std::size_t index)
 	return id;
 }
 
-static MonthTypes IsValidMonth(const std::vector<std::string>& commend, std::size_t index) {
+static MonthTypes GetValidMonth(const std::vector<std::string>& commend, std::size_t index) {
 	if (commend[index] != "--month") {
 		throw std::invalid_argument(std::format("Error:\tinvalide argument - \"{}\"! {}",
 			commend[index], "You should use \"--month\"!"));
@@ -156,18 +162,14 @@ static MonthTypes IsValidMonth(const std::vector<std::string>& commend, std::siz
 	return month;
 }
 
-void HendlerCommendAdd(const std::vector<std::string>& commend, std::vector<Expense>& expenses) {
-	IsValideCountArgument(commend, 5);
-	std::string_view description{ GetValideDescription(commend, 1) };
-	float amount{ GetValideAmount(commend, 3) };
-
-	ID id{ 1 };
-	if (!expenses.empty()) {
-		id = expenses.back().GetID() + 1;
+static Expense::Type GetValidExpenseType(const std::vector<std::string>& commend, std::size_t index) {
+	if (commend[index] != "--type") {
+		throw std::invalid_argument(std::format("Error:\tinvalide argument - \"{}\"! {}",
+			commend[index], "You should use \"--type\"!"));
 	}
 
-	expenses.emplace_back(Expense{ id, description, amount });
-	std::cout << std::format("Expense added successfully.(ID: {})\n", id);
+	//the index + 1 is the value of the key in the array by index
+	return ExpenseUtils::from_string_type(commend[index + 1]);
 }
 
 static auto FindOrderByID(std::vector<Expense>& expenses, ID id) {
@@ -181,6 +183,48 @@ static auto FindOrderByID(std::vector<Expense>& expenses, ID id) {
 	return found;
 }
 
+static void PrintAll(const std::vector<Expense>& expenses) {
+	std::wcout.imbue(std::locale("en_US.UTF-8"));
+	for (const auto& item : expenses) {
+		std::wcout << std::format(L"ID: {}\tDATE: {}\tDESCRIPTION: {}\tAMOUNT: {}\tTYPE: {}\n",
+			item.GetID(),
+			Utf8Converter::utf8_decode(ExpenseUtils::to_string(item.GetCreateAt())),
+			Utf8Converter::utf8_decode(item.GetDescription()),
+			item.GetAmount(),
+			Utf8Converter::utf8_decode(ExpenseUtils::to_string(item.GetType())));
+	}
+}
+
+static void Print(const std::vector<Expense>& expenses, Expense::Type type) {
+	std::wcout.imbue(std::locale("en_US.UTF-8"));
+	for (const auto& item : expenses) {
+		if (item.GetType() == type) {
+			std::wcout << std::format(L"ID: {}\tDATE: {}\tDESCRIPTION: {}\tAMOUNT: {}\n",
+				item.GetID(),
+				Utf8Converter::utf8_decode(ExpenseUtils::to_string(item.GetCreateAt())),
+				Utf8Converter::utf8_decode(item.GetDescription()),
+				item.GetAmount());
+		}
+	}
+}
+
+
+
+void HendlerCommendAdd(const std::vector<std::string>& commend, std::vector<Expense>& expenses) {
+	IsValideCountArgument(commend, 5);
+	std::string_view description{ GetValideDescription(commend, 1) };
+	float amount{ GetValideAmount(commend, 3) };
+	Expense::Type type{ };
+
+	ID id{ 1 };
+	if (!expenses.empty()) {
+		id = expenses.back().GetID() + 1;
+	}
+
+	expenses.emplace_back(Expense{ id, description, amount, type });
+	std::cout << std::format("Expense added successfully.(ID: {})\n", id);
+}
+
 void HendlerCommendUpdate(const std::vector<std::string>& commend, std::vector<Expense>& expenses) {
 	IsValideCountArgument(commend, 5);
 
@@ -190,7 +234,13 @@ void HendlerCommendUpdate(const std::vector<std::string>& commend, std::vector<E
 		found -> SetDescription(GetValideDescription(commend, 1));
 	}
 	catch (std::invalid_argument&) {
-		found -> SetAmount(GetValideAmount(commend, 1));
+		try {
+			found -> SetAmount(GetValideAmount(commend, 1));
+		}
+		catch (std::invalid_argument&) {
+			found -> SetType(GetValidExpenseType(commend, 1));
+
+		}
 	}
 
 	std::cout << std::format("Expense updated successfully.(ID: {})\n", id);
@@ -209,24 +259,18 @@ void HendlerCommendDelete(const std::vector<std::string>& commend, std::vector<E
 	std::cout << std::format("Expense deleted successfully.(ID: {})\n", id);
 }
 
-static void Print(const std::vector<Expense>& expenses) {
-	std::wcout.imbue(std::locale("en_US.UTF-8"));
-	for (const auto& item : expenses) {
-		std::wcout << std::format(L"ID: {}\tDATE: {}\tDESCRIPTION: {}\tAMOUNT: {}\n",
-			item.GetID(),
-			Utf8Converter::utf8_decode(ExpenseUtils::to_string(item.GetCreateAt())),
-			Utf8Converter::utf8_decode(item.GetDescription()),
-			item.GetAmount());
-	}
-}
-
 void HendlerCommendList(const std::vector<std::string>& commend, std::vector<Expense>& expenses) {
-	if (expenses.empty() || commend.empty()) {
+	if (expenses.empty()) {
 		std::cout << "List is empty!\n";
+	}
+
+	if (commend.size() == 1) {
+		PrintAll(expenses);
 		return;
 	}
 
-	Print(expenses);
+	IsValideCountArgument(commend, 3);
+	Print(expenses, GetValidExpenseType(commend, 1));
 }
 
 void HendlerCommendSummary(const std::vector<std::string>& commend, std::vector<Expense>& expenses) {
@@ -238,7 +282,7 @@ void HendlerCommendSummary(const std::vector<std::string>& commend, std::vector<
 	}
 
 	IsValideCountArgument(commend, 3);
-	MonthTypes type{ IsValidMonth(commend, 1) };
+	MonthTypes type{ GetValidMonth(commend, 1) };
 	float sum{ std::accumulate(expenses.begin(), expenses.end(), 0.0F,
 			[type](float acc, const auto& item) -> float {
 				std::chrono::month month{ item.GetCreateAt().month() };
